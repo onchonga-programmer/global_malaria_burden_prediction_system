@@ -4,10 +4,10 @@ boto3==1.34.0
 python-dotenv==1.0.0     
 pandas==2.2.3             
 
-# ── Stage 2: Transformation (install when you get there) ─────────────────────
-# pyarrow==14.0.1         # writes Parquet files for Silver/Gold layers
-# dbt-core==1.7.0         # SQL transformations
-# dbt-athena-community==1.7.0  # dbt adapter for AWS Athena
+# ── Stage 2: Transformation 
+ pyarrow==14.0.1         
+ dbt-core==1.7.0         
+ dbt-athena-community==1.7.0  
 
 # ── Stage 4: ML Training (install when you get there) ────────────────────────
 # prophet==1.1.5           # time series forecasting
