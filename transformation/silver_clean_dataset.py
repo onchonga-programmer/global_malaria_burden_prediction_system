@@ -11,33 +11,30 @@ logger = logging.getLogger(__name__)
 
 DATASET_CONFIGS = {
     "malaria_deaths": {
-        "bronze_prefix": "bronze/malaria/malaria_deaths_",
+        "bronze_prefix": "bronze/malaria/malaria_deaths_who_",
         "silver_key": "silver/malaria/deaths.parquet",
-        "value_col": "deaths_malaria_sex_both_age_age_standardized",
         "rename": {
             "entity": "country",
             "year": "year",
-            "deaths_malaria_sex_both_age_age_standardized": "deaths",
+            "death_count__age_group_allages__sex_both_sexes__cause_malaria": "deaths",
         },
     },
     "malaria_death_rate": {
         "bronze_prefix": "bronze/malaria/malaria_death_rate_",
         "silver_key": "silver/malaria/death_rate.parquet",
-        "value_col": "deaths_malaria_sex_both_age_age_standardized_rate",
         "rename": {
             "entity": "country",
             "year": "year",
-            "deaths_malaria_sex_both_age_age_standardized_rate": "death_rate_per_100k",
+            "death_rate100k__age_group_allages__sex_both_sexes__cause_malaria": "death_rate_per_100k",
         },
     },
     "malaria_incidence": {
         "bronze_prefix": "bronze/malaria/malaria_incidence_",
         "silver_key": "silver/malaria/incidence.parquet",
-        "value_col": "incidence_of_malaria_per_1_000_population_at_risk",
         "rename": {
             "entity": "country",
             "year": "year",
-            "incidence_of_malaria_per_1_000_population_at_risk": "incidence_per_1000",
+            "sh_mlr_incd_p3": "incidence_per_1000",
         },
     },
 }
@@ -57,17 +54,15 @@ def get_latest_bronze_key(s3_client, bucket: str, prefix: str) -> str:
 
 
 def read_bronze_json(s3_client, bucket: str, key: str) -> pd.DataFrame:
-    
     obj = s3_client.get_object(Bucket=bucket, Key=key)
     raw = json.loads(obj["Body"].read().decode("utf-8"))
     
-    columns = list(raw["columns"].keys())
-    rows = raw["rows"]
+    columns = raw["columns"]  
+    rows = raw["data"]        
     
     df = pd.DataFrame(rows, columns=columns)
-    logger.info(f"Read {len(df)} rows, {len(columns)} columns from {key}")
+    logger.info(f"Read {len(df)} rows, columns: {columns}")
     return df
-
 
 def clean_dataset(df: pd.DataFrame, config: dict) -> pd.DataFrame:
   

@@ -1,11 +1,12 @@
 
-
-
 services:
 
   # ── Ingestion service ───────────────────────────────────────────────────────
   ingestion:
-    build: .
+    build: 
+      context:
+      dockerfile: docker/Dockerfile.ingestion
+    env_file: .env
 
     # Image name 
     image: malaria-ingestion:latest
@@ -14,7 +15,16 @@ services:
     env_file:
       - .env
 
-  
+  # transformation services
+  transformation:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.transformation
+    env_file: .env
+   
+    depends_on:
+      - ingestion  
+   # volumes     
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
