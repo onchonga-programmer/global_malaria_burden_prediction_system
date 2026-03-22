@@ -50,7 +50,7 @@ def run_gold_features(cleaned_datasets: dict, bucket: str, s3_client=None):
     # Year-over-year percentage change
     for col in ["death_rate_per_100k", "deaths"]:
         if col in df.columns:
-            df[f"{col}_yoy_pct"] = grp[col].pct_change() * 100
+            df[f"{col}_yoy_pct"] = grp[col].pct_change(fill_method=None) * 100
     
     who_regions = {
         "Nigeria": "AFRO", "Kenya": "AFRO", "Tanzania": "AFRO",
