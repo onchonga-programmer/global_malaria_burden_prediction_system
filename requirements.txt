@@ -3,12 +3,13 @@ requests==2.31.0
 boto3==1.34.0             
 python-dotenv==1.0.0     
 pandas==2.2.3   
-numpy==1.26.4          
+numpy          
 
 # ── Stage 2: Transformation 
  pyarrow==14.0.1         
  dbt-core==1.7.0         
- dbt-athena-community==1.7.0  
+ dbt-athena-community==1.7.0 
+ awswrangler==3.7.0 
 
 # ── Stage 4: ML Training (install when you get there) ────────────────────────
 # prophet==1.1.5           # time series forecasting
