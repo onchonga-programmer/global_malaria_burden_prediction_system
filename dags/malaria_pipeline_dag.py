@@ -1,59 +1,59 @@
-from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
+from datetime import datetime, timedelta
 from docker.types import Mount
 
-# ── Default settings applied to every task ───────────────────
 default_args = {
     "owner": "airflow",
-    "retries": 2,                          # retry failed tasks twice
-    "retry_delay": timedelta(minutes=5),   # wait 5 mins between retries
-    "email_on_failure": False,
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
 }
 
-# ── Define the DAG ────────────────────────────────────────────
 with DAG(
     dag_id="malaria_pipeline",
-    description="Ingest malaria data from OWID and transform to gold layer",
     default_args=default_args,
+    description="Daily malaria data ingestion and transformation",
+    schedule_interval="@daily",
     start_date=datetime(2024, 1, 1),
-    schedule_interval="0 6 * * *",   # every day at 6am
-    catchup=False,                   # don't backfill missed runs
+    catchup=False,
     tags=["malaria", "ingestion", "transformation"],
 ) as dag:
 
-    # ── Task 1: Ingestion ─────────────────────────────────────
     ingest = DockerOperator(
-        task_id="ingest_malaria_data",
+        task_id="bronze_ingestion",
         image="malaria-ingestion",
-        auto_remove=True,           # remove container after it finishes
+        command="python run_ingestion.py",
         docker_url="unix:///var/run/docker.sock",
         network_mode="bridge",
-        environment={
-            "AWS_ACCESS_KEY_ID": "{{ var.value.AWS_ACCESS_KEY_ID }}",
-            "AWS_SECRET_ACCESS_KEY": "{{ var.value.AWS_SECRET_ACCESS_KEY }}",
-            "S3_BUCKET_NAME": "{{ var.value.S3_BUCKET_NAME }}",
-        },
-        mounts=[
-            Mount(source="/logs", target="/app/logs", type="bind")
-        ],
-    )
-
-    # ── Task 2: Transformation ────────────────────────────────
-    transform = DockerOperator(
-        task_id="transform_malaria_data",
-        image="malaria-transformation",
         auto_remove=True,
-        docker_url="unix:///var/run/docker.sock",
-        network_mode="bridge",
         environment={
             "AWS_ACCESS_KEY_ID": "{{ var.value.AWS_ACCESS_KEY_ID }}",
             "AWS_SECRET_ACCESS_KEY": "{{ var.value.AWS_SECRET_ACCESS_KEY }}",
-            "S3_BUCKET_NAME": "{{ var.value.S3_BUCKET_NAME }}",
+            "S3_BUCKET": "{{ var.value.S3_BUCKET }}",
         },
         mounts=[
-            Mount(source="/logs", target="/app/logs", type="bind")
+            Mount(source="/home/brenda/Global_Malaria_burden_predicting_system/logs",
+                  target="/app/logs", type="bind")
         ],
     )
 
-    
+    transform = DockerOperator(
+        task_id="silver_gold_transformation",
+        image="malaria-transformation",
+        command="python run_transformation.py",
+        docker_url="unix:///var/run/docker.sock",
+        network_mode="bridge",
+        auto_remove=True,
+        environment={
+            "AWS_ACCESS_KEY_ID": "{{ var.value.AWS_ACCESS_KEY_ID }}",
+            "AWS_SECRET_ACCESS_KEY": "{{ var.value.AWS_SECRET_ACCESS_KEY }}",
+            "S3_BUCKET": "{{ var.value.S3_BUCKET }}",
+        },
+        mounts=[
+            Mount(source="/home/brenda/Global_Malaria_burden_predicting_system/logs",
+                  target="/app/logs", type="bind")
+        ],
+    )
+
+    # This arrow defines the order: ingest THEN transform
+    ingest >> transform

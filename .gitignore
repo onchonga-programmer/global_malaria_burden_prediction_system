@@ -32,3 +32,4 @@ Thumbs.db
 logs/
 data/raw/
 ingestion/data/raw/
+airflow-logs/
