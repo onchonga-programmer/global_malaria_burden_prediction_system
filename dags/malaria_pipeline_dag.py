@@ -22,10 +22,11 @@ with DAG(
     ingest = DockerOperator(
         task_id="bronze_ingestion",
         image="malaria-ingestion",
-        command="python run_ingestion.py",
+        command="python ingestion/run_ingestion.py",
         docker_url="unix:///var/run/docker.sock",
         network_mode="bridge",
         auto_remove=True,
+        mount_tmp_dir=False,
        
         environment={
             "AWS_ACCESS_KEY_ID":     "{{ var.value.AWS_ACCESS_KEY_ID }}",
@@ -49,6 +50,7 @@ with DAG(
         docker_url="unix:///var/run/docker.sock",
         network_mode="bridge",
         auto_remove=True,
+        mount_tmp_dir=False,
         environment={
             "AWS_ACCESS_KEY_ID":     "{{ var.value.AWS_ACCESS_KEY_ID }}",
             "AWS_SECRET_ACCESS_KEY": "{{ var.value.AWS_SECRET_ACCESS_KEY }}",
