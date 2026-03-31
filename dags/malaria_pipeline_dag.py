@@ -46,7 +46,7 @@ with DAG(
     transform = DockerOperator(
         task_id="silver_gold_transformation",
         image="malaria-transformation",
-        command="python run_transformation.py",
+        command="python  transformation/run_transformation.py",
         docker_url="unix:///var/run/docker.sock",
         network_mode="bridge",
         auto_remove=True,
