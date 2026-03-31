@@ -33,3 +33,9 @@ logs/
 data/raw/
 ingestion/data/raw/
 airflow-logs/
+
+# MLflow tracking outputs
+mlflow.db
+mlartifacts/
+mlruns/
+
