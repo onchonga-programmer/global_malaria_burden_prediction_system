@@ -92,6 +92,41 @@ services:
     volumes:
       - ./logs:/app/logs
     restart: "no"
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.11.3
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root s3://malaria-forecast-bree/mlflow-artifacts/
+      --host 0.0.0.0
+    env_file: .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      retries: 5
+      start_period: 15s
 
+  training:
+    build:
+      context: "."
+      dockerfile: docker/Dockerfile.training
+    image: malaria-training
+    env_file: .env
+    environment:
+     
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./logs:/app/logs
+    restart: "no"
+    depends_on:
+      mlflow:
+        condition: service_healthy
+        
 volumes:
   postgres_data:
+  mlflow_data:
