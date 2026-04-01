@@ -11,25 +11,22 @@ load_dotenv()
 S3_BUCKET = os.getenv("S3_BUCKET_NAME", "malaria-forecast-bree")
 GOLD_KEY  = "gold/malaria_features/features.parquet"
 
+
 FEATURE_COLS = [
-    "incidence_per_1000",
-    "deaths",
-    "death_rate_per_100k",
     "deaths_lag1",
     "deaths_lag2",
     "deaths_lag3",
     "deaths_rolling3",
-    "deaths_yoy_pct",
     "death_rate_per_100k_lag1",
     "death_rate_per_100k_lag2",
     "death_rate_per_100k_lag3",
     "death_rate_per_100k_rolling3",
-    "death_rate_per_100k_yoy_pct",
+    "incidence_per_1000",        
     "incidence_per_1000_lag1",
     "incidence_per_1000_lag2",
     "incidence_per_1000_lag3",
-    "who_region_encoded",   
-    "is_covid_period",      
+    "who_region_encoded",
+    "is_covid_period",
     "year_normalized",
 ]
 
