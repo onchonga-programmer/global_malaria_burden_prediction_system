@@ -87,12 +87,7 @@ def train_prophet_for_region(region_name: str, region_df: pd.DataFrame) -> dict:
 
 
 def save_forecast_plot(region_name: str, model, forecast, region_df) -> str:
-    """
-    Save a visual forecast plot showing:
-    - Black dots: actual historical deaths
-    - Blue line: model's fitted trend + forecast
-    - Light blue band: 95% uncertainty interval
-    """
+
     fig = model.plot(forecast, figsize=(12, 5))
     plt.title(f"Malaria Death Forecast — {region_name}", fontsize=14)
     plt.xlabel("Year")
@@ -106,10 +101,7 @@ def save_forecast_plot(region_name: str, model, forecast, region_df) -> str:
 
 
 def save_components_plot(region_name: str, model, forecast) -> str:
-    """
-    Save a components plot showing trend and any seasonal patterns separately.
-    This is the 'explainability' plot — shows WHY the model forecasts what it does.
-    """
+    
     fig = model.plot_components(forecast, figsize=(12, 6))
     plt.tight_layout()
     path = f"/tmp/prophet_components_{region_name}.png"
@@ -119,10 +111,7 @@ def save_components_plot(region_name: str, model, forecast) -> str:
 
 
 def train_all_regions(prophet_dfs: dict):
-    """
-    Loop through all regions, train one Prophet model each,
-    log everything to MLflow under a separate experiment per region.
-    """
+    
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
     all_forecasts = {}  

@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 USER airflow
 
-# Keep runtime deps focused for orchestration and AWS interactions.
 RUN pip install --no-cache-dir \
 	psycopg2-binary==2.9.9 \
 	apache-airflow-providers-amazon==8.20.0
