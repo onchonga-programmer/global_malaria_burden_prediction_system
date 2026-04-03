@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+    git \
 
 COPY docker/requirements.training.txt .
 RUN pip install --no-cache-dir -r requirements.training.txt
