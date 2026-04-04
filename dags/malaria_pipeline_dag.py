@@ -9,8 +9,7 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-# The Docker Compose network MLflow lives on.
-# Named after your project folder — check with: docker network ls
+
 COMPOSE_NETWORK = "global_malaria_burden_predicting_system_default"
 
 # Common AWS environment variables — defined once, reused in all three tasks
