@@ -24,8 +24,8 @@ load_dotenv()
 # ── Configuration 
 
 S3_BUCKET        = os.getenv("S3_BUCKET", "malaria-forecast-bree")
-GOLD_KEY         = "gold/features.parquet"
-MLFLOW_URI       = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+GOLD_KEY         = "gold/malaria_features/features.parquet"
+MLFLOW_URI       = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 MODEL_NAME       = "malaria_lgbm_classifier"
 
 FEATURE_COLS = [
@@ -45,7 +45,6 @@ WHO_REGIONS  = ["AFRO", "AMRO", "EMRO", "SEARO", "WPRO"]
 
 
 def load_gold_data() -> pd.DataFrame:
-    """Pull features.parquet from S3 and return as DataFrame."""
     log.info("Loading gold data from S3...")
     s3 = boto3.client("s3")
     obj = s3.get_object(Bucket=S3_BUCKET, Key=GOLD_KEY)
@@ -55,10 +54,7 @@ def load_gold_data() -> pd.DataFrame:
 
 
 def prepare_test_set(df: pd.DataFrame):
-    """
-    Return the test set (2019+) with complete feature rows only.
-    We validate on the test set — the model has never seen these rows.
-    """
+   
     df = df.copy()
 
     # One-hot encode WHO region 
@@ -79,7 +75,6 @@ def prepare_test_set(df: pd.DataFrame):
 
 
 def load_production_model():
-    """Load the registered production LightGBM model from MLflow."""
     log.info(f"Loading model '{MODEL_NAME}' from MLflow registry...")
     mlflow.set_tracking_uri(MLFLOW_URI)
     model_uri = f"models:/{MODEL_NAME}/Production"
@@ -99,15 +94,7 @@ def save_figure(fig, filename: str) -> str:
 # ── Level 1: Global beeswarm ───────────────────────────────────────────────────
 
 def plot_global_beeswarm(shap_values, X_test: pd.DataFrame) -> str:
-    """
-    Beeswarm plot: every dot = one country-year prediction.
-    Each row = one feature.
-    Dot position on x-axis = SHAP value (impact on prediction).
-    Dot colour = feature value (red=high, blue=low).
-
-    Read it as: "For high values of deaths_lag1, the model is pushed
-    strongly toward 'not improving'."
-    """
+    
     log.info("Plotting Level 1: global beeswarm...")
 
     fig, ax = plt.subplots(figsize=(10, 7))
@@ -131,13 +118,7 @@ def plot_global_beeswarm(shap_values, X_test: pd.DataFrame) -> str:
 # ── Level 2: Per-region bar charts ────────────────────────────────────────────
 
 def plot_per_region_bars(shap_values, X_test: pd.DataFrame, test_df: pd.DataFrame) -> list[str]:
-    """
-    For each WHO region, compute the mean absolute SHAP value per feature.
-    Plot as a horizontal bar chart.
-
-    This answers: "Does AFRO rely on different features than AMRO?"
-    It should — malaria dynamics are genuinely different by region.
-    """
+   
     log.info("Plotting Level 2: per-region SHAP bars...")
 
     # shap_values.values is shape (n_rows, n_features)
@@ -185,16 +166,7 @@ def plot_country_waterfall(
     country: str,
     year: int,
 ) -> str | None:
-    """
-    Waterfall plot for a single country-year prediction.
-
-    Shows: baseline → each feature's contribution → final prediction.
-    This is what you show to a WHO analyst asking 'why does your model
-    say Nigeria is not improving in 2022?'
-
-    The bars are stacked — green bars push toward 'improving',
-    red bars push away from it.
-    """
+  
     log.info(f"Plotting Level 3: waterfall for {country} {year}...")
 
     # Find this specific row in the test set
@@ -232,13 +204,7 @@ def plot_country_waterfall(
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def run_shap_analysis():
-    """
-    Full SHAP pipeline:
-      1. Load data and model
-      2. Compute SHAP values (once — this is the expensive step)
-      3. Generate all three levels of plots
-      4. Log everything to MLflow
-    """
+ 
     log.info("=" * 60)
     log.info("Stage 5 — SHAP Deep Analysis")
     log.info("=" * 60)
@@ -251,17 +217,7 @@ def run_shap_analysis():
     X_test = test_df[FEATURE_COLS]
     y_test = test_df[TARGET_COL]
 
-    # ── Compute SHAP values ──────────────────────────────────────────────────
-    #
-    # TreeExplainer is SHAP's fast explainer for tree-based models (LightGBM,
-    # XGBoost, Random Forest). It uses an exact algorithm — not an approximation.
-    #
-    # shap_values.values  → shape (n_rows, n_features)
-    #   positive value = pushed toward "improving" (class 1)
-    #   negative value = pushed away from "improving"
-    #
-    # This is the most expensive step. For ~10,000 rows it takes ~30 seconds.
-    #
+  
     log.info("Computing SHAP values with TreeExplainer...")
     log.info("  (This is the slowest step — ~30s for 10k rows)")
     explainer   = shap.TreeExplainer(model)
@@ -273,10 +229,7 @@ def run_shap_analysis():
 
     region_paths  = plot_per_region_bars(shap_values, X_test, test_df)
 
-    # Waterfall examples — pick a few interesting countries
-    # Nigeria  2022: large AFRO country, high burden
-    # Thailand 2022: SEARO success story
-    # Yemen    2022: EMRO conflict-affected country
+    
     waterfall_countries = [
         ("Nigeria",  2022),
         ("Thailand", 2022),

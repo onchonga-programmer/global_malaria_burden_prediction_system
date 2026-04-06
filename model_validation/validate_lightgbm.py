@@ -28,8 +28,8 @@ load_dotenv()
 # ── Configuration ──────────────────────────────────────────────────────────────
 
 S3_BUCKET  = os.getenv("S3_BUCKET", "malaria-forecast-bree")
-GOLD_KEY   = "gold/features.parquet"
-MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+GOLD_KEY   = "gold/malaria_features/features.parquet"
+MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
 FEATURE_COLS = [
     "deaths_lag1", "deaths_lag2", "deaths_lag3",
@@ -55,11 +55,7 @@ CV_WINDOWS = [
 
 WHO_REGIONS = ["AFRO", "AMRO", "EMRO", "SEARO", "WPRO"]
 
-# LightGBM hyperparameters — identical to Stage 4 training
-# We retrain from scratch on each window; we don't load the registered model.
-# Reason: we want to measure how the model would have performed if it had only
-# seen data up to that window's cutoff. Loading the Production model (trained
-# on 2000-2018) and testing on 2015-2016 would be data leakage.
+
 LGBM_PARAMS = {
     "objective":        "binary",
     "metric":           "binary_logloss",
