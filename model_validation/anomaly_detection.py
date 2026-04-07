@@ -25,8 +25,8 @@ load_dotenv()
 # ── Configuration ──────────────────────────────────────────────────────────────
 
 S3_BUCKET  = os.getenv("S3_BUCKET", "malaria-forecast-bree")
-GOLD_KEY   = "gold/features.parquet"
-MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000")
+GOLD_KEY   = "gold/malaria_features/features.parquet"
+MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
 WHO_REGIONS = ["AFRO", "AMRO", "EMRO", "SEARO", "WPRO"]
 

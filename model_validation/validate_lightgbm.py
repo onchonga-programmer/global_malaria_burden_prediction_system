@@ -10,6 +10,7 @@ import numpy as np
 import lightgbm as lgb
 import mlflow
 import mlflow.lightgbm
+from mlflow.exceptions import MlflowException
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -32,13 +33,21 @@ GOLD_KEY   = "gold/malaria_features/features.parquet"
 MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
 FEATURE_COLS = [
-    "deaths_lag1", "deaths_lag2", "deaths_lag3",
+    "deaths_lag1",
+    "deaths_lag2",
+    "deaths_lag3",
     "deaths_rolling3",
-    "incidence_lag1", "incidence_lag2",
-    "year", "is_covid_period",
-    "who_region_AFRO", "who_region_AMRO", "who_region_EMRO",
-    "who_region_EURO", "who_region_SEARO", "who_region_WPRO",
-    "scale_factor",
+    "death_rate_per_100k_lag1",
+    "death_rate_per_100k_lag2",
+    "death_rate_per_100k_lag3",
+    "death_rate_per_100k_rolling3",
+    "incidence_per_1000",
+    "incidence_per_1000_lag1",
+    "incidence_per_1000_lag2",
+    "incidence_per_1000_lag3",
+    "who_region_encoded",
+    "is_covid_period",
+    "year_normalized",
 ]
 
 TARGET_COL       = "improving"
@@ -54,6 +63,17 @@ CV_WINDOWS = [
 ]
 
 WHO_REGIONS = ["AFRO", "AMRO", "EMRO", "SEARO", "WPRO"]
+MODEL_NAME  = "malaria_lgbm_classifier"
+REGION_MAP  = {
+    "AFRO": 0,
+    "SEARO": 1,
+    "EMRO": 2,
+    "WPRO": 3,
+    "AMRO": 4,
+    "EURO": 5,
+    "OTHER": 6,
+    "Other": 6,
+}
 
 
 LGBM_PARAMS = {
@@ -79,8 +99,10 @@ def load_and_prepare() -> pd.DataFrame:
     obj = s3.get_object(Bucket=S3_BUCKET, Key=GOLD_KEY)
     df  = pd.read_parquet(io.BytesIO(obj["Body"].read()))
 
-    # One-hot encode WHO region
-    df = pd.get_dummies(df, columns=["who_region"], prefix="who_region")
+    if "is_covid_period" not in df.columns:
+        df["is_covid_period"] = (df["year"] >= 2020).astype(int)
+    if "who_region_encoded" not in df.columns:
+        df["who_region_encoded"] = df["who_region"].map(REGION_MAP).fillna(6).astype(int)
 
     # Add any missing region columns
     for col in FEATURE_COLS:
@@ -92,6 +114,50 @@ def load_and_prepare() -> pd.DataFrame:
 
     log.info(f"  Ready: {len(df):,} rows, years {df['year'].min()}–{df['year'].max()}")
     return df
+
+
+def load_reference_model():
+    """Load Production model if available; otherwise use latest registry/run fallback."""
+    mlflow.set_tracking_uri(MLFLOW_URI)
+    primary_uri = f"models:/{MODEL_NAME}/Production"
+
+    try:
+        model = mlflow.lightgbm.load_model(primary_uri)
+        log.info("  Loaded Production model")
+        return model
+    except MlflowException as exc:
+        log.warning(f"  Production stage not available: {exc}")
+
+    client = mlflow.tracking.MlflowClient()
+    versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+    if versions:
+        latest = max(versions, key=lambda v: int(v.version))
+        uri = f"models:/{MODEL_NAME}/{latest.version}"
+        model = mlflow.lightgbm.load_model(uri)
+        log.info(f"  Loaded fallback registry version: {latest.version}")
+        return model
+
+    exp = mlflow.get_experiment_by_name("malaria_lightgbm")
+    if exp is not None:
+        runs = mlflow.search_runs(
+            experiment_ids=[exp.experiment_id],
+            order_by=["start_time DESC"],
+            max_results=30,
+        )
+        for _, row in runs.iterrows():
+            run_id = row["run_id"]
+            run_uri = f"runs:/{run_id}/model"
+            try:
+                model = mlflow.lightgbm.load_model(run_uri)
+                log.info(f"  Loaded fallback run artifact model from run {run_id[:8]}...")
+                return model
+            except Exception:
+                continue
+
+    raise RuntimeError(
+        "No LightGBM model found in MLflow registry or runs. "
+        "Run stage 4 training first to log a model artifact."
+    )
 
 
 # ── Walk-forward cross validation ─────────────────────────────────────────────
@@ -205,21 +271,14 @@ def run_bias_audit(df: pd.DataFrame) -> pd.DataFrame:
     We use the Production model here — not a retrained one — because we want
     to know how the deployed model performs per region, not a hypothetical one.
     """
-    log.info("\nBias audit — loading Production model...")
-    mlflow.set_tracking_uri(MLFLOW_URI)
-    model = mlflow.lightgbm.load_model(f"models:/malaria_lgbm_classifier/Production")
+    log.info("\nBias audit — loading reference model...")
+    model = load_reference_model()
 
     test_df = df[df["year"] >= 2019].copy()
     X_test  = test_df[FEATURE_COLS]
     y_test  = test_df[TARGET_COL]
 
-    # Recover region label from one-hot columns
-    region_cols    = [c for c in test_df.columns if c.startswith("who_region_")]
-    test_df["region"] = (
-        test_df[region_cols]
-        .idxmax(axis=1)
-        .str.replace("who_region_", "")
-    )
+    test_df["region"] = test_df["who_region"].astype(str)
 
     y_pred      = model.predict(X_test)
     y_pred_prob = model.predict_proba(X_test)[:, 1]

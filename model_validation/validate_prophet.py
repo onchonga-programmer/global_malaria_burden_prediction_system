@@ -45,14 +45,16 @@ def load_regional_series() -> dict[str, pd.DataFrame]:
     obj = s3.get_object(Bucket=S3_BUCKET, Key=GOLD_KEY)
     df  = pd.read_parquet(io.BytesIO(obj["Body"].read()))
 
-   
-    region_df = df[df["is_aggregate_region"] == True].copy()
+    # Match stage 4 preparation: aggregate country rows by WHO region/year.
+    region_df = df[df["is_aggregate_region"] == False].copy()
 
     regional_series = {}
     for region in WHO_REGIONS:
         r_df = (
-            region_df[region_df["who_region"] == region][["year", "deaths"]]
-            .dropna()
+            region_df[region_df["who_region"] == region]
+            .groupby("year", as_index=False)["deaths"]
+            .sum()
+            .dropna(subset=["deaths"])
             .sort_values("year")
             .copy()
         )
@@ -103,7 +105,12 @@ def validate_region(region: str, series_df: pd.DataFrame) -> dict:
   
     df_perf = performance_metrics(df_cv, rolling_window=1.0)
 
-    mape = float(df_perf["mape"].mean())    
+    if "mape" in df_perf.columns:
+        mape = float(df_perf["mape"].mean())
+    else:
+        # Prophet can omit MAPE when actuals are close to zero; use WAPE-style fallback.
+        denom = float(np.abs(df_cv["y"]).sum())
+        mape = float(np.abs(df_cv["y"] - df_cv["yhat"]).sum() / denom) if denom > 0 else float("nan")
     mae  = float(df_perf["mae"].mean())
     rmse = float(df_perf["rmse"].mean())
 
@@ -259,6 +266,10 @@ def run_prophet_validation():
 
     regional_series = load_regional_series()
 
+    if not regional_series:
+        log.warning("No WHO regional time series available for Prophet validation.")
+        return
+
     results = []
     for region, series_df in regional_series.items():
         result = validate_region(region, series_df)
@@ -280,7 +291,12 @@ def run_prophet_validation():
     summary_df = pd.DataFrame(summary_rows)
 
     log.info("\nValidation summary:")
-    log.info(summary_df[["region", "mape", "mae", "ci_coverage", "ci_verdict"]].to_string(index=False))
+    display_cols = ["region", "mape", "mae", "ci_coverage", "ci_verdict"]
+    available_cols = [c for c in display_cols if c in summary_df.columns]
+    if summary_df.empty or not available_cols:
+        log.warning("  No successful Prophet CV results to summarize.")
+    else:
+        log.info(summary_df[available_cols].to_string(index=False))
 
     log.info("\nInterpretation notes:")
     for r in results:
