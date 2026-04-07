@@ -1,0 +1,21 @@
+
+
+FROM python:3.12-slim
+
+# Build tools needed by LightGBM and Prophet/cmdstan
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ build-essential cmake libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies first (layer caching)
+COPY docker/requirements.validation.txt .
+RUN pip install --no-cache-dir -r requirements.validation.txt
+
+# Install cmdstan for Prophet (same step as training image)
+#RUN python -c "import cmdstanpy; cmdstanpy.install_cmdstan()"
+
+COPY model_validation/ .
+
+CMD ["python", "run_validation.py"]

@@ -132,7 +132,22 @@ services:
     depends_on:
       mlflow:
         condition: service_healthy
-        
+  validation:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.validation
+    image: malaria-validation
+    container_name: malaria-validation
+    env_file: .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    
+    profiles:
+      - validation          
 volumes:
   postgres_data:
   mlflow_data:
