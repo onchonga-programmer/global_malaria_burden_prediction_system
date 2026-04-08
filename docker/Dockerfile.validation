@@ -1,5 +1,4 @@
 
-
 FROM python:3.12-slim
 
 # Build tools needed by LightGBM and Prophet/cmdstan
@@ -12,8 +11,7 @@ WORKDIR /app
 # Install Python dependencies first (layer caching)
 COPY docker/requirements.validation.txt .
 RUN pip install --no-cache-dir -r requirements.validation.txt
-
-
+#copy validation code
 COPY model_validation/ .
-
+# entry point
 CMD ["python", "run_validation.py"]
