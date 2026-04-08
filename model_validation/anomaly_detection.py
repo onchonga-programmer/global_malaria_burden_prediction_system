@@ -30,24 +30,18 @@ MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
 WHO_REGIONS = ["AFRO", "AMRO", "EMRO", "SEARO", "WPRO"]
 
-# Features we use to characterise each country's trajectory.
-# These describe the shape of a country's malaria burden over time,
-# not a single year — we aggregate to one row per country first.
+
 TRAJECTORY_FEATURES = [
-    "deaths_mean",           # average annual deaths (scale of burden)
-    "deaths_trend",          # slope of deaths over time (improving/worsening)
-    "deaths_volatility",     # std dev of annual deaths (how stable)
-    "death_rate_mean",       # average death rate per 100k
-    "death_rate_trend",      # slope of death rate over time
-    "pct_years_improving",   # fraction of years where deaths fell
-    "yoy_mean",              # mean year-over-year % change
-    "yoy_volatility",        # std dev of year-over-year % change
+    "deaths_mean",           
+    "deaths_trend",          
+    "deaths_volatility",     
+    "death_rate_mean",       
+    "death_rate_trend",      
+    "pct_years_improving",   
+    "yoy_mean",            
+    "yoy_volatility",        
 ]
 
-# Isolation Forest contamination parameter.
-# This tells the model roughly what fraction of points to flag as anomalies.
-# 0.10 = flag the most extreme ~10% of countries per region.
-# Adjust upward if you want more flags, downward for stricter filtering.
 CONTAMINATION = 0.10
 
 # Analysis window — we characterise trajectories over recent years only
@@ -91,9 +85,7 @@ def build_country_trajectories(df: pd.DataFrame) -> pd.DataFrame:
         yoy         = grp["deaths_yoy_pct"].dropna()
         years       = grp.loc[deaths.index, "year"].values
 
-        # Linear trend — slope of a regression line through deaths over time
-        # Positive slope = deaths rising (worsening)
-        # Negative slope = deaths falling (improving)
+       
         if len(years) >= 3:
             deaths_trend = float(np.polyfit(years, deaths.values, 1)[0])
         else:
@@ -148,9 +140,7 @@ def detect_anomalies_for_region(
     scaler   = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Fit Isolation Forest
-    # contamination = expected fraction of anomalies in the dataset
-    # random_state  = reproducibility
+   
     iso = IsolationForest(
         contamination=CONTAMINATION,
         random_state=42,
@@ -163,9 +153,7 @@ def detect_anomalies_for_region(
     region_df["anomaly_score"] = iso.score_samples(X_scaled)
     region_df["is_anomaly"]    = iso.predict(X_scaled) == -1
 
-    # Classify direction of anomaly
-    # If a flagged country has negative deaths_trend → improving faster than peers
-    # If positive deaths_trend → deteriorating faster than peers
+ 
     def classify_direction(row):
         if not row["is_anomaly"]:
             return "normal"

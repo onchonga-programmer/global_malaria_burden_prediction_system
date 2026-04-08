@@ -53,8 +53,7 @@ FEATURE_COLS = [
 TARGET_COL       = "improving"
 SCALE_POS_WEIGHT = 3.15      # same as training — keeps class weighting consistent
 
-# Walk-forward windows: each tuple is (train_end, test_start, test_end)
-# Training always starts at 2000; we expand the window each time.
+
 CV_WINDOWS = [
     (2014, 2015, 2016),
     (2016, 2017, 2018),
@@ -160,7 +159,6 @@ def load_reference_model():
     )
 
 
-# ── Walk-forward cross validation ─────────────────────────────────────────────
 
 def run_cv_window(
     df: pd.DataFrame,
@@ -264,13 +262,7 @@ def plot_cv_results(cv_df: pd.DataFrame) -> str:
 # ── Bias / fairness audit ─────────────────────────────────────────────────────
 
 def run_bias_audit(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Load the Production model from MLflow.
-    Evaluate it on the test set (2019+) broken down by WHO region.
-
-    We use the Production model here — not a retrained one — because we want
-    to know how the deployed model performs per region, not a hypothetical one.
-    """
+    
     log.info("\nBias audit — loading reference model...")
     model = load_reference_model()
 

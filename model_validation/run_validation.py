@@ -45,28 +45,28 @@ def main():
 
     results = {}
 
-    # ── Step 1: SHAP deep analysis ──
+    #: SHAP deep analysis ──
     def run_shap():
         from shap_analysis import run_shap_analysis
         run_shap_analysis()
 
     results["SHAP analysis"] = run_step("SHAP analysis", run_shap)
 
-    # ── Step 2: LightGBM cross validation + bias audit ──
+    #  LightGBM cross validation + bias audit 
     def run_lgbm():
         from validate_lightgbm import run_validation
         run_validation()
 
     results["LightGBM validation"] = run_step("LightGBM validation", run_lgbm)
 
-    # ── Step 3: Prophet accuracy + calibration ──
+    # ── Prophet accuracy + calibration ──
     def run_prophet():
         from validate_prophet import run_prophet_validation
         run_prophet_validation()
 
     results["Prophet validation"] = run_step("Prophet validation", run_prophet)
 
-    # ── Step 4: Anomaly detection ──
+    # ──  Anomaly detection ──
     def run_anomaly():
         from anomaly_detection import run_anomaly_detection
         run_anomaly_detection()

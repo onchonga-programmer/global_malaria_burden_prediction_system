@@ -13,8 +13,6 @@ WORKDIR /app
 COPY docker/requirements.validation.txt .
 RUN pip install --no-cache-dir -r requirements.validation.txt
 
-# Install cmdstan for Prophet (same step as training image)
-#RUN python -c "import cmdstanpy; cmdstanpy.install_cmdstan()"
 
 COPY model_validation/ .
 
