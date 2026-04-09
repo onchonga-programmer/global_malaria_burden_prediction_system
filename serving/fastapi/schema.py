@@ -14,6 +14,8 @@ class AnomalyPoint(BaseModel):
     anomaly_score: float
 
 class ForecastResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     region: str
     forecast: List[ForecastPoint]
     shap_values: Dict[str, float]
@@ -21,6 +23,8 @@ class ForecastResponse(BaseModel):
     model_version: str
 
 class ClassifyResponse(BaseModel):
+    model_config = {"protected_namespaces": ()}
+
     region: str
     prediction: str          # "improving" or "deteriorating"
     probability: float       # confidence 0.0 to 1.0
