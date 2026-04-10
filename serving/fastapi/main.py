@@ -7,7 +7,7 @@ import logging
 import os
 
 from schema import ForecastResponse, ClassifyResponse, HealthResponse, ForecastPoint, AnomalyPoint
-from modelloader import load_all_models
+from model_loader import load_all_models
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
