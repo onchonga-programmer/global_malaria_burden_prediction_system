@@ -61,7 +61,7 @@ def get_forecast(region: str):
     
     # Create future dataframe for next 5 years
     future = pd.DataFrame({
-        "ds": pd.date_range(start="2025-01-01", periods=5, freq="YE")
+        "ds": pd.date_range(start="2025-01-01", periods=5, freq="A")
     })
     
     forecast_df = prophet_model.predict(future)
@@ -148,21 +148,37 @@ def get_classification(region: str):
 
 def _get_latest_features(region: str) -> dict | None:
     """
-    In production: read latest row from S3 gold layer for this region.
-    For now: returns a hardcoded representative feature set.
-    We'll replace this with real S3 reads in the next step.
+    Returns a representative feature row for the given region.
+    Features match exactly what the LightGBM model was trained on.
+    
+    In production this would read the latest row from S3 gold layer.
+    Values here are regional averages used as a reasonable placeholder.
     """
-    placeholder_features = {
-        "deaths_lag1": 400000,
-        "deaths_lag2": 420000,
-        "deaths_rolling_mean_3": 410000,
-        "gdp_per_capita": 1800,
-        "population": 1200000000,
-        "region_AFRO": 1 if region == "AFRO" else 0,
-        "region_AMRO": 1 if region == "AMRO" else 0,
-        "region_EMRO": 1 if region == "EMRO" else 0,
-        "region_EURO": 1 if region == "EURO" else 0,
-        "region_SEARO": 1 if region == "SEARO" else 0,
-        "region_WPRO": 1 if region == "WPRO" else 0,
+    # Region encoding — matches who_region_encoded from training
+    region_encoding = {
+        "AFRO": 0, "AMRO": 1, "EMRO": 2,
+        "EURO": 3, "SEARO": 4, "WPRO": 5
     }
-    return placeholder_features
+
+    if region not in region_encoding:
+        return None
+
+    # Representative values based on AFRO-scale malaria burden
+    # These are placeholders — real serving would pull from S3
+    return {
+        "deaths_lag1":                400000.0,
+        "deaths_lag2":                420000.0,
+        "deaths_lag3":                440000.0,
+        "deaths_rolling3":            420000.0,
+        "death_rate_per_100k_lag1":   45.0,
+        "death_rate_per_100k_lag2":   47.0,
+        "death_rate_per_100k_lag3":   49.0,
+        "death_rate_per_100k_rolling3": 47.0,
+        "incidence_per_1000":         220.0,
+        "incidence_per_1000_lag1":    230.0,
+        "incidence_per_1000_lag2":    240.0,
+        "incidence_per_1000_lag3":    250.0,
+        "who_region_encoded":         float(region_encoding[region]),
+        "is_covid_period":            0.0,
+        "year_normalized":            0.8,   # ~2022 normalized
+    }
