@@ -98,6 +98,8 @@ services:
       - "5000:5000"
     volumes:
       - mlflow_data:/mlflow
+    networks:
+      - malaria_network
     command: >
       mlflow server
       --backend-store-uri sqlite:///mlflow/mlflow.db
@@ -128,6 +130,8 @@ services:
       MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
       - ./logs:/app/logs
+    networks:
+      - malaria_network
     restart: "no"
     depends_on:
       mlflow:
@@ -142,6 +146,8 @@ services:
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - AWS_DEFAULT_REGION=us-east-1
+    networks:
+      - malaria_network
     depends_on:
       mlflow:
         condition: service_healthy
@@ -151,7 +157,7 @@ services:
   fastapi:
     build:
       context: ./serving/fastapi
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.fastapi
     container_name: malaria_fastapi
     ports:
       - "8001:8001"
@@ -159,7 +165,7 @@ services:
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_DEFAULT_REGION=${AWS_REGION}
     networks:
       - malaria_network
     depends_on:
@@ -170,7 +176,7 @@ services:
   streamlit:
     build:
       context: ./serving/streamlit
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.streamlit
     container_name: malaria_streamlit
     ports:
       - "8502:8502"
@@ -184,3 +190,6 @@ services:
 volumes:
   postgres_data:
   mlflow_data:
+
+networks:
+  malaria_network:

@@ -1,0 +1,42 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# System deps required by Prophet and LightGBM
+RUN apt-get update && apt-get install -y \
+    build-essential gcc g++ cmake curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+# cmdstanpy must be installed and cmdstan downloaded before prophet
+RUN pip install --no-cache-dir cmdstanpy==1.2.4 && \
+    python -c "import cmdstanpy; cmdstanpy.install_cmdstan()" && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8001
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# System deps required by Prophet and LightGBM
+RUN apt-get update && apt-get install -y \
+    build-essential gcc g++ cmake curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+
+# cmdstanpy must be installed and cmdstan downloaded before prophet
+RUN pip install --no-cache-dir cmdstanpy==1.2.4 && \
+    python -c "import cmdstanpy; cmdstanpy.install_cmdstan()" && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8001
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

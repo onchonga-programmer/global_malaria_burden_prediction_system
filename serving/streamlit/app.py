@@ -3,9 +3,8 @@ import requests
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-
-# ── Config ────────────────────────────────────────────────────────
-FASTAPI_URL = "http://localhost:8001"
+import os
+FASTAPI_URL = os.getenv("FASTAPI_URL", "http://localhost:8001")
 REGIONS = ["AFRO", "AMRO", "EMRO", "SEARO", "WPRO"]
 
 st.set_page_config(
