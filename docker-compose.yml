@@ -147,7 +147,40 @@ services:
         condition: service_healthy
     
     profiles:
-      - validation          
+      - validation  
+  fastapi:
+    build:
+      context: ./serving/fastapi
+      dockerfile: Dockerfile
+    container_name: malaria_fastapi
+    ports:
+      - "8001:8001"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+    networks:
+      - malaria_network
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: unless-stopped
+
+  streamlit:
+    build:
+      context: ./serving/streamlit
+      dockerfile: Dockerfile
+    container_name: malaria_streamlit
+    ports:
+      - "8502:8502"
+    environment:
+      - FASTAPI_URL=http://fastapi:8001
+    networks:
+      - malaria_network
+    depends_on:
+      - fastapi
+    restart: unless-stopped            
 volumes:
   postgres_data:
   mlflow_data:
