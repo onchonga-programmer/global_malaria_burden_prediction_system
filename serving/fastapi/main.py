@@ -147,13 +147,7 @@ def get_classification(region: str):
     )
 
 def _get_latest_features(region: str) -> dict | None:
-    """
-    Returns a representative feature row for the given region.
-    Features match exactly what the LightGBM model was trained on.
-    
-    In production this would read the latest row from S3 gold layer.
-    Values here are regional averages used as a reasonable placeholder.
-    """
+   
     # Region encoding — matches who_region_encoded from training
     region_encoding = {
         "AFRO": 0, "AMRO": 1, "EMRO": 2,
