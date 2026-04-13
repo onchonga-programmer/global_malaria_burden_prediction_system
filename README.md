@@ -415,7 +415,7 @@ Select any WHO region to see a 5-year malaria death forecast with
 95% confidence intervals, trend classification (improving vs
 deteriorating), and model confidence score.
 
-![Forecast dashboard](screenshots/dashboard_forecast.png)
+![Forecast dashboard](screenshots/forecasts.png)
 
 ---
 
@@ -426,7 +426,7 @@ showing which variables drove the model toward its classification.
 domain knowledge that last year's death rate is the strongest
 predictor of this year's trend.
 
-![SHAP panel](screenshots/dashboard_shap.png)
+![SHAP panel](screenshots/shap_values.png)
 
 ---
 
@@ -436,7 +436,7 @@ to MLflow. The model registry enforces promotion gating — only models
 that pass all four Stage 5 validation checks reach the Production stage
 and are served by FastAPI.
 
-![MLflow tracking](screenshots/mlflow_experiments.png)
+![MLflow tracking](screenshots/mlflow.png)
 
 ---
 
@@ -504,13 +504,6 @@ docker push <account_id>.dkr.ecr.us-east-1.amazonaws.com/malaria-streamlit
 
 ---
 
-## 👩‍💻 Author
-
-Built by **Bee** as a data engineering and MLOps portfolio project
-demonstrating production-grade pipeline design, ML model validation,
-and health data interpretability.
-
----
 
 ## 📄 License
 

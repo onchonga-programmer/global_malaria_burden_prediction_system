@@ -38,4 +38,9 @@ airflow-logs/
 mlflow.db
 mlartifacts/
 mlruns/
-
+# pictures
+*.png
+*.jpg
+*.jpeg
+*.gif
+screenshots/
