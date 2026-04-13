@@ -415,7 +415,7 @@ Select any WHO region to see a 5-year malaria death forecast with
 95% confidence intervals, trend classification (improving vs
 deteriorating), and model confidence score.
 
-![Forecast dashboard](screenshots/forecasts.png)
+![Forecast dashboard](screenshots/forecast.png)
 
 ---
 
