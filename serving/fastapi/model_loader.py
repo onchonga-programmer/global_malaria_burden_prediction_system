@@ -22,15 +22,7 @@ LIGHTGBM_EXPERIMENT_ID = "1"
 
 
 def _load_prophet_model(model_uri):
-    """
-    Load a Prophet model from the MLflow artifact payload.
-
-    The Prophet artifacts in this project are stored as a JSON string that
-    contains another JSON string. Older Prophet releases also attempt to load
-    a Stan backend during deserialization, which can fail in this runtime.
-    We normalize the payload to a dict and temporarily use a safe backend
-    loader so deserialization can complete.
-    """
+   
     from prophet.forecaster import Prophet, StanBackendEnum
     from prophet.serialize import model_from_dict
 
