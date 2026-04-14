@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ── API calls (cached so we don't hammer FastAPI on every rerun) ──
+# ── API calls 
 @st.cache_data(ttl=300)  # cache for 5 minutes
 def get_forecast(region: str):
     try:
@@ -42,7 +42,6 @@ def get_health():
     except Exception:
         return None
 
-# ── Sidebar ───────────────────────────────────────────────────────
 with st.sidebar:
     st.title("Controls")
 
@@ -108,7 +107,6 @@ with col3:
 
 st.divider()
 
-# ── Row 2: Forecast chart ─────────────────────────────────────────
 st.subheader("5-Year Malaria Death Forecast")
 
 forecast_df = pd.DataFrame(forecast_data["forecast"])
@@ -149,7 +147,6 @@ st.plotly_chart(fig_forecast, use_container_width=True)
 
 st.divider()
 
-# ── Row 3: SHAP values ────────────────────────────────────────────
 st.subheader("What's Driving This Prediction?")
 st.caption("SHAP values show how much each feature pushed the model toward 'improving' (positive) or 'deteriorating' (negative)")
 
@@ -178,7 +175,6 @@ st.plotly_chart(fig_shap, use_container_width=True)
 
 st.divider()
 
-# ── Row 4: Raw data expander ──────────────────────────────────────
 with st.expander("Show raw forecast data"):
     st.dataframe(forecast_df, use_container_width=True)
     st.caption(f"Model version: {forecast_data['model_version']}")
