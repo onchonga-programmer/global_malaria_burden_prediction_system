@@ -12,8 +12,7 @@ from model_loader import load_all_models
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# This dictionary holds all loaded models
-# It lives outside any function so all endpoints can access it
+
 ml_models = {}
 
 @asynccontextmanager
@@ -26,7 +25,6 @@ async def lifespan(app: FastAPI):
     
     yield  # Server is now running and accepting requests
     
-    # Everything AFTER yield runs at shutdown
     ml_models.clear()
     logger.info("Models cleared from memory")
 
@@ -104,9 +102,7 @@ def get_classification(region: str):
     
     lgbm_model = ml_models["lightgbm"]
     
-    # Build a feature row for the most recent year of this region
-    # In production you'd read this from S3 gold layer
-    # For now we use a representative feature set
+    
     feature_row = _get_latest_features(region)
     
     if feature_row is None:
@@ -148,7 +144,6 @@ def get_classification(region: str):
 
 def _get_latest_features(region: str) -> dict | None:
    
-    # Region encoding — matches who_region_encoded from training
     region_encoding = {
         "AFRO": 0, "AMRO": 1, "EMRO": 2,
         "EURO": 3, "SEARO": 4, "WPRO": 5
@@ -157,8 +152,7 @@ def _get_latest_features(region: str) -> dict | None:
     if region not in region_encoding:
         return None
 
-    # Representative values based on AFRO-scale malaria burden
-    # These are placeholders — real serving would pull from S3
+   
     return {
         "deaths_lag1":                400000.0,
         "deaths_lag2":                420000.0,

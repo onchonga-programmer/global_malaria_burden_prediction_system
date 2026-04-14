@@ -74,7 +74,7 @@ def load_all_models():
     client = mlflow.tracking.MlflowClient()
     models = {}
 
-    # ── Load LightGBM ──────────────────────────────────────────────
+    
     try:
         runs = client.search_runs(
             experiment_ids=[LIGHTGBM_EXPERIMENT_ID],
@@ -92,7 +92,6 @@ def load_all_models():
     except Exception as e:
         logger.error(f"Failed to load LightGBM: {e}")
 
-    # ── Load Prophet models per region ─────────────────────────────
     for region, exp_id in PROPHET_EXPERIMENT_IDS.items():
         try:
             runs = client.search_runs(
