@@ -1,4 +1,3 @@
-# ingestion/fetch_owid.py
 
 import requests
 import json
@@ -39,7 +38,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-# ── Dataset URLs ──────────────────────────────────────────────────────────────
 
 DATASETS = {
     "malaria_death_rate": (
