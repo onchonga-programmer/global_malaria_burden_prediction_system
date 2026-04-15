@@ -13,10 +13,7 @@ from upload_to_s3 import upload_all, verify_upload, get_s3_client
 
 
 def run_stage_1():
-    """
-    Orchestrates the full Stage 1 pipeline:
-    OWID API → local bronze → S3 bronze
-    """
+    
     logger.info("=" * 50)
     logger.info("STAGE 1 — Bronze Ingestion Pipeline")
     logger.info("=" * 50)
@@ -39,7 +36,6 @@ def run_stage_1():
         logger.error("No files were uploaded to S3. Check AWS credentials.")
         sys.exit(1)
 
-    # ── Step 3: Verify uploads ─────────────────────────────────────────────
     logger.info("Verifying uploads in S3...")
     s3_client = get_s3_client()
     all_verified = True
